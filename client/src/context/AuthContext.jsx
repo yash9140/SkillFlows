@@ -42,13 +42,13 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (email, password) => {
+const login = async (email, password) => {
   const res = await fetch(`${process.env.REACT_APP_API_URL}/auth/login`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
   });
 
   const contentType = res.headers.get('content-type');
@@ -61,11 +61,12 @@ export const AuthProvider = ({ children }) => {
     throw new Error(errorMessage);
   }
 
-  if (!contentType || !contentType.includes('application/json')) {
-    throw new Error('Expected JSON response but got something else');
-  }
-
   const data = await res.json();
+
+  // Save token and set user
+  localStorage.setItem('token', data.token);
+  setUser(data.user);
+
   return data;
 };
 
@@ -73,9 +74,9 @@ const register = async (name, email, password, role = 'user') => {
   const res = await fetch(`${process.env.REACT_APP_API_URL}/auth/register`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ name, email, password, role })
+    body: JSON.stringify({ name, email, password, role }),
   });
 
   const contentType = res.headers.get('content-type');
@@ -88,11 +89,12 @@ const register = async (name, email, password, role = 'user') => {
     throw new Error(errorMessage);
   }
 
-  if (!contentType || !contentType.includes('application/json')) {
-    throw new Error('Expected JSON response but got something else');
-  }
-
   const data = await res.json();
+
+  //  Save token and set user
+  localStorage.setItem('token', data.token);
+  setUser(data.user);
+
   return data;
 };
 
