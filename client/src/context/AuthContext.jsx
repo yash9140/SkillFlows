@@ -43,57 +43,59 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    console.log('Attempting login with:', { email, password });
-    
-    try {
-      const response = await fetch('/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
+  const res = await fetch(`${process.env.REACT_APP_API_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ email, password })
+  });
 
-      console.log('Login response status:', response.status);
-      const data = await response.json();
-      console.log('Login response data:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-
-      if (!data.token || !data.user) {
-        throw new Error('Invalid response from server');
-      }
-
-      localStorage.setItem('token', data.token);
-      setUser(data.user);
-      console.log('User set in context:', data.user);
-      return data;
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+  const contentType = res.headers.get('content-type');
+  if (!res.ok) {
+    let errorMessage = 'Login failed';
+    if (contentType && contentType.includes('application/json')) {
+      const errorData = await res.json();
+      errorMessage = errorData.error || errorMessage;
     }
-  };
+    throw new Error(errorMessage);
+  }
 
-  const register = async (name, email, password, role = 'user') => {
-    const response = await fetch('/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ name, email, password, role })
-    });
+  if (!contentType || !contentType.includes('application/json')) {
+    throw new Error('Expected JSON response but got something else');
+  }
 
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error);
+  const data = await res.json();
+  return data;
+};
+
+const register = async (name, email, password, role = 'user') => {
+  const res = await fetch(`${process.env.REACT_APP_API_URL}/auth/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ name, email, password, role })
+  });
+
+  const contentType = res.headers.get('content-type');
+  if (!res.ok) {
+    let errorMessage = 'Registration failed';
+    if (contentType && contentType.includes('application/json')) {
+      const errorData = await res.json();
+      errorMessage = errorData.error || errorMessage;
     }
+    throw new Error(errorMessage);
+  }
 
-    localStorage.setItem('token', data.token);
-    setUser(data.user);
-    return data;
-  };
+  if (!contentType || !contentType.includes('application/json')) {
+    throw new Error('Expected JSON response but got something else');
+  }
+
+  const data = await res.json();
+  return data;
+};
+
 
   const logout = () => {
     localStorage.removeItem('token');
